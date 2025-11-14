@@ -1,0 +1,20 @@
+# Common
+.swp
+stage.tmp/
+.DS_Store
+.idea/
+.vscode/
+build/
+*.log
+
+# PlatformIO
+.pio/
+
+# Arduino
+*.bin
+*.elf
+
+# ESP-IDF
+sdkconfig
+build/
+.component_build/
