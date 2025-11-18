@@ -9,8 +9,8 @@
 constexpr int kBallCount = 4;
 constexpr float kMinRadius = 9.0f;
 constexpr float kMaxRadius = 12.0f;
-constexpr float kMinSpeed = 0.65f;
-constexpr float kMaxSpeed = 2.0f;
+constexpr float kMinSpeed = 0.35f;
+constexpr float kMaxSpeed = 1.0f;
 constexpr float kFieldThreshold = 0.45f;
 constexpr float kMinRadiusDrift = 0.005f;
 constexpr float kMaxRadiusDrift = 0.02f;
