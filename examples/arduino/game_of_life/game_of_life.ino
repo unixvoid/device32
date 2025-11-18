@@ -35,7 +35,7 @@ bool lastButtonState = HIGH;
 // Function to initialize the display
 void initDisplay() {
   Wire.begin(SDA_PIN, SCL_PIN);
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3C for SSD1306
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;);
   }
@@ -107,7 +107,6 @@ void setup() {
 }
 
 void loop() {
-  // Check for button press (edge detection for debouncing)
   bool currentButtonState = digitalRead(BUTTON_PIN);
   if (currentButtonState == LOW && lastButtonState == HIGH) {
     randomizeGrid();

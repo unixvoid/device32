@@ -35,7 +35,6 @@ struct GridCell {
     uint8_t count;
 };
 
-// Boid structure (optimized for cache efficiency)
 struct Boid {
     float x, y;
     float vx, vy;
@@ -55,14 +54,13 @@ static bool lastButtonState = HIGH;
 static bool buttonCurrentlyPressed = false;
 static bool lastDebouncedState = HIGH;
 
-// Inline distance check (squared, to avoid sqrt)
+// Inline distance check
 inline float distanceSquared(float x1, float y1, float x2, float y2) {
     float dx = x2 - x1;
     float dy = y2 - y1;
     return dx * dx + dy * dy;
 }
 
-// Function to limit a value to a maximum magnitude
 inline float limitMagnitude(float val, float limit) {
     if (val > limit) return limit;
     if (val < -limit) return -limit;
@@ -99,7 +97,7 @@ void buildGrid() {
 // Get nearby boids from grid
 void getNearbyBoids(int index, uint8_t* nearby, uint8_t& count, float max_dist_sq) {
     count = 0;
-    float max_dist_sq_limit = max_dist_sq + 100; // Small buffer
+    float max_dist_sq_limit = max_dist_sq + 100;
 
     int cell_x = (int)boids[index].x / GRID_CELL_SIZE;
     int cell_y = (int)boids[index].y / GRID_CELL_SIZE;
@@ -376,7 +374,6 @@ void drawBoids() {
         
         // Draw line from current position to direction point
         if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT) {
-            // Clamp end point to screen bounds
             x2 = constrain(x2, 0, SCREEN_WIDTH - 1);
             y2 = constrain(y2, 0, SCREEN_HEIGHT - 1);
             
@@ -395,18 +392,15 @@ void updateAllBoids() {
     }
 }
 
-// Handle button press with debouncing
 void handleButtonPress() {
     bool currentState = digitalRead(BUTTON_PIN);
     static bool debounceActive = false;
 
-    // Detect when raw state changes
     if (currentState != lastDebouncedState && !debounceActive) {
         lastButtonChangeTime = millis();
         debounceActive = true;
     }
 
-    // Wait for debounce period to complete
     if (debounceActive && (millis() - lastButtonChangeTime) > DEBOUNCE_DELAY) {
         debounceActive = false;
         lastDebouncedState = currentState;
