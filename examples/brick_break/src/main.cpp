@@ -15,6 +15,12 @@ GameState gameState = PLAYING;
 unsigned long endTime;
 int bouncesSinceBrick = 0;
 
+const int brick_draw_width = BRICK_WIDTH - 2;
+const int brick_gap = 2;
+const int total_brick_width = BRICK_COLS * brick_draw_width + (BRICK_COLS - 1) * brick_gap;
+const int brick_start_x = (GAME_WIDTH - total_brick_width) / 2 - 1;
+const int brick_start_y = 2;
+
 void resetGame() {
   for (int r = 0; r < BRICK_ROWS; r++) {
     for (int c = 0; c < BRICK_COLS; c++) {
@@ -85,8 +91,8 @@ void loop() {
     for (int r = 0; r < BRICK_ROWS; r++) {
       for (int c = 0; c < BRICK_COLS; c++) {
         if (bricks[r][c]) {
-          int bx = c * BRICK_WIDTH;
-          int by = r * BRICK_HEIGHT;
+          int bx = brick_start_x + c * BRICK_WIDTH;
+          int by = brick_start_y + r * BRICK_HEIGHT;
           if (ballX >= bx && ballX <= bx + BRICK_WIDTH && ballY >= by && ballY <= by + BRICK_HEIGHT) {
             bricks[r][c] = false;
             ballVelY = -ballVelY;
@@ -122,7 +128,7 @@ void loop() {
     for (int r = 0; r < BRICK_ROWS; r++) {
       for (int c = 0; c < BRICK_COLS; c++) {
         if (bricks[r][c]) {
-          display.fillRect(c * BRICK_WIDTH + 1, r * BRICK_HEIGHT + 1, BRICK_WIDTH - 2, BRICK_HEIGHT - 2, SSD1306_WHITE);
+          display.fillRect(brick_start_x + c * BRICK_WIDTH + 1, brick_start_y + r * BRICK_HEIGHT + 1, BRICK_WIDTH - 2, BRICK_HEIGHT - 2, SSD1306_WHITE);
         }
       }
     }
