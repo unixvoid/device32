@@ -1,24 +1,18 @@
 # device32 Examples
 
-This repository contains platform-appropriate example projects and documentation for device32. It aims to provide robust, working examples for three ecosystems so users can pick their preferred workflow:
-
-- Arduino (Arduino IDE / Boards Manager sketches)
-- PlatformIO (VSCode / CLI projects)
-- ESP-IDF (native ESP-IDF projects using VSCode / CMake)
+This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and SD card capabilities.
 
 Quick links
-- examples/arduino — Arduino sketches and assets
-- examples/platformio — PlatformIO projects + platformio.ini
-- examples/esp-idf — ESP-IDF projects and components
+- examples/ — PlatformIO projects with individual READMEs
 - docs/ — hardware, wiring, BOM, and enclosure notes
 
-Getting started (short)
+Getting started
 1. Clone the repo:
+   ```
    git clone https://github.com/unixvoid/device32.git
-2. See the per-platform README:
-   - examples/arduino/README.md
-   - examples/platformio/README.md
-   - examples/esp-idf/README.md
+   ```
+2. Each example in the `examples/` directory has its own README with setup and usage instructions.
+3. Use PlatformIO to build and flash the examples to your Seeed Xiao ESP32C3 board.
 
 Contributions
 See CONTRIBUTING.md for contribution guidelines and example creation guidance.
