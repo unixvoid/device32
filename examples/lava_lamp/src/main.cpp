@@ -124,6 +124,7 @@ void interpolateEdge(float f1, float f2, int x1, int y1, int x2, int y2, int& ix
 
 void renderMetaballs() {
   display.clearDisplay();
+  display.drawRoundRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 4, SSD1306_WHITE);
 
   for (int gy = 0; gy < kGridHeight; ++gy) {
     for (int gx = 0; gx < kGridWidth; ++gx) {
