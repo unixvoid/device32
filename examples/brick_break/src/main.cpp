@@ -80,8 +80,8 @@ void loop() {
       float hitPos = (ballX - paddleX) / PADDLE_WIDTH;
       ballVelX = (hitPos - 0.5) * 3.0;
       ballVelX += random(-1, 2); // Add extra randomness
-      if (abs(ballVelX) < 1.0) {
-        ballVelX = (ballVelX > 0) ? 1.0 : -1.0;
+      if (abs(ballVelX) < 1.4) {
+        ballVelX = (ballVelX > 0) ? 1.4 : -1.4;
       }
       ballVelY = -abs(ballVelY); // Always bounce up
       bouncesSinceBrick++;
