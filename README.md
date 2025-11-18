@@ -17,13 +17,12 @@ Getting started
    ```
    git clone https://github.com/unixvoid/device32.git
    ```
-5. **Open the Project in VSCode**: Launch VSCode, select "File > Open Folder", and open the cloned `device32` directory.
-6. **Run an Example**:
+5. **Run an Example**:
    - Each example in `examples/` is a separate PlatformIO project (with its own `platformio.ini`).
-   - Open an example folder (e.g., `examples/boids/`) in VSCode as a new window or via "File > Open Folder".
-   - Use the PlatformIO toolbar in VSCode to build (hammer icon) and flash (arrow icon) the project to your device32.
+   - Open an example folder (e.g., `examples/brick_break/`) in VSCode as a new window or via "File > Open Folder".
    - Connect your device32 via USB and select the correct serial port in PlatformIO if prompted.
-7. **Additional Notes**:
+   - Use the PlatformIO toolbar in VSCode to build (hammer icon) and flash (arrow icon) the project to your device32.
+6. **Additional Notes**:
    - Check the `docs/` folder for hardware setup, wiring, and BOM details.
    - If an example lacks a README, refer to the main repo README or PlatformIO docs for general ESP32 flashing guidance.
    - For issues, ensure your device32 is powered on and connected, and check the PlatformIO logs in VSCode's terminal.
