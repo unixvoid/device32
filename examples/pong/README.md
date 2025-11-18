@@ -1,5 +1,7 @@
 # Pong
 
+![Pong Demo](../../docs/pong.gif)
+
 This is a simple pong simulation where 2 computer players play against each other forever.
 
 ## Requirements

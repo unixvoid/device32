@@ -1,5 +1,7 @@
 # Fluid Cloud
 
+![Fluid Cloud Demo](../../docs/fluid_cloud.gif)
+
 Fluid Cloud is a WIP fluid simulation demo, it started as a lava lamp but I ended up going a different direction. I plan to re-visit this eventually and make the fluid more active and move around.
 
 ## Requirements

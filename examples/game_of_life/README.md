@@ -1,5 +1,7 @@
 # Game of Life
 
+![Game of Life Demo](../../docs/game_of_life.gif)
+
 This is an example demo of Conway's Game of Life:
 - Any live cell with fewer than two live neighbours dies, as if by underpopulation.
 - Any live cell with two or three live neighbours lives on to the next generation.
