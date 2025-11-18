@@ -7,12 +7,14 @@ Quick links
 - docs/ — hardware, wiring, BOM, and enclosure notes
 
 Getting started
-1. Clone the repo:
+1. Make sure you have a suitable PlatformIO development environment setup.  
+   We recommend [VSCode with the PlatformIO extension](https://docs.platformio.org/en/latest/integration/ide/vscode.html#installation).
+2. Clone the repo:
    ```
    git clone https://github.com/unixvoid/device32.git
    ```
-2. Each example in the `examples/` directory has its own README with setup and usage instructions.
-3. Use PlatformIO to build and flash the examples to your Seeed Xiao ESP32C3 board.
+3. Each example in the `examples/` directory has its own README with setup and usage instructions.
+4. Use PlatformIO to build and flash the examples to device32.
 
 Contributions
 See CONTRIBUTING.md for contribution guidelines and example creation guidance.
