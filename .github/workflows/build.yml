@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop, task/*, feature/* ]
+  pull_request:
+    branches: [ main, develop, task/*, feature/* ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+
+    - name: Build all examples
+      run: |
+        for dir in examples/*/; do
+          if [ -f "$dir/platformio.ini" ]; then
+            echo "Building $dir"
+            cd "$dir"
+            pio run
+            cd ../..
+          fi
+        done

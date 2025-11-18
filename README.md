@@ -1,5 +1,6 @@
 # device32
 ![device32](docs/device32_banner.png)
+[![Build](https://github.com/unixvoid/device32/actions/workflows/build.yml/badge.svg)](https://github.com/unixvoid/device32/actions/workflows/build.yml)
 
 This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and select button on the back.
 
