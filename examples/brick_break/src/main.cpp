@@ -136,7 +136,7 @@ void loop() {
     display.fillRect(ballX, ballY, 4, 4, SSD1306_WHITE);
     display.display();
 
-    if (bouncesSinceBrick > 20) {
+    if (bouncesSinceBrick > 34) {
       gameState = LOSE;
       endTime = millis() + 2000;
     }
