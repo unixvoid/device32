@@ -1,4 +1,5 @@
-# device32 Examples
+# device32
+![device32](docs/device32_banner.png)
 
 This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and SD card capabilities.
 
