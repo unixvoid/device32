@@ -1,15 +1,15 @@
-# device32
+# Getting started with device32
 ![device32](docs/device32_banner.png)
 [![build](https://github.com/unixvoid/device32/actions/workflows/build.yml/badge.svg)](https://github.com/unixvoid/device32/actions/workflows/build.yml)
 [![GitHub License](https://img.shields.io/badge/License-MIT-blue?logo=github)](https://github.com/unixvoid/device32/blob/main/LICENSE)
 
 This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and select button on the back.
 
-Quick links
-- examples/ — PlatformIO projects with individual READMEs
-- docs/ — hardware, wiring, BOM, and enclosure notes
+## Quick links
+- [examples/](https://github.com/unixvoid/device32/tree/main/examples/) — PlatformIO projects with individual READMEs
+- [docs/](https://github.com/unixvoid/device32/tree/main/docs/) — hardware, wiring, BOM, and enclosure notes
 
-Getting started
+## Getting started
 1. **Install Visual Studio Code (VSCode)**: Download and install VSCode from [https://code.visualstudio.com/](https://code.visualstudio.com/) if you haven't already.
 2. **Install the PlatformIO Extension**: Open VSCode, go to the Extensions view (Ctrl+Shift+X), search for "PlatformIO IDE", and install it. This extension provides the PlatformIO interface within VSCode.
 3. **Install Prerequisites**:
@@ -28,8 +28,8 @@ Getting started
    - If an example lacks a README, refer to the main repo README or PlatformIO docs for general ESP32 flashing guidance.
    - For issues, ensure your device32 is powered on and connected, and check the PlatformIO logs in VSCode's terminal.
 
-Contributions
+### Contributions
 See CONTRIBUTING.md for contribution guidelines and example creation guidance.
 
-License
+### License
 This repo is licensed under the MIT License — see LICENSE.
