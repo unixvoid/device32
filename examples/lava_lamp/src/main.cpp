@@ -6,16 +6,16 @@
 
 #include "config.h"
 
-constexpr int kBallCount = 6;
-constexpr float kMinRadius = 6.0f;
-constexpr float kMaxRadius = 9.0f;
+constexpr int kBallCount = 4;
+constexpr float kMinRadius = 9.0f;
+constexpr float kMaxRadius = 12.0f;
 constexpr float kMinSpeed = 0.65f;
 constexpr float kMaxSpeed = 2.0f;
 constexpr float kFieldThreshold = 0.45f;
 constexpr float kMinRadiusDrift = 0.005f;
 constexpr float kMaxRadiusDrift = 0.02f;
 constexpr unsigned long kFrameDelay = 0;
-constexpr int kRenderSkip = 3;
+constexpr int kRenderSkip = 4;
 constexpr int kGridWidth = (SCREEN_WIDTH + kRenderSkip - 1) / kRenderSkip;
 constexpr int kGridHeight = (SCREEN_HEIGHT + kRenderSkip - 1) / kRenderSkip;
 
