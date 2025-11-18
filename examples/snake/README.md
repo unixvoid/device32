@@ -1,6 +1,6 @@
 # Snake
 
-![Snake Demo](../../docs/snake.gif)
+![Snake Demo](../../docs/gifs/snake.gif)
 
 Simulation of the simple snake game. Snake starts out as 1 segment and hunts food pellets. When the snake consumes a pellet it increases in length by 1 segment. The game is over when the snake runs into a wall or itself.
 

@@ -1,6 +1,6 @@
 # Caves
 
-![Caves Demo](../../docs/caves.gif)
+![Caves Demo](../../docs/gifs/caves.gif)
 
 Caves is a nethack dungeon generator. The program generates random stronghold rooms and caves and draws it to the screen.
 

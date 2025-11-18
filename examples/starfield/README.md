@@ -1,6 +1,6 @@
 # Starfield
 
-![Starfield Demo](../../docs/starfield.gif)
+![Starfield Demo](../../docs/gifs/starfield.gif)
 
 Starfield is a simulator that constantly shows the navigation and progression through a field of stars. The stars move past the user as they progress forwards.
 

@@ -1,6 +1,6 @@
 # Lava Lamp
 
-![Lava Lamp Demo](../../docs/lava_lamp.gif)
+![Lava Lamp Demo](../../docs/gifs/lava_lamp.gif)
 
 This is a lava lamp simulation using metaballs as blobs.
 

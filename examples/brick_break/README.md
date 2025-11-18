@@ -1,6 +1,6 @@
 # Brick Break
 
-![Brick Break Demo](../../docs/brick_break.gif)
+![Brick Break Demo](../../docs/gifs/brick_break.gif)
 
 Brick Break is a breakout game demo. The AI does not match the balls moves 1 for 1 but instead shows a little lag between inputs. The computer wins most of the time but not all of the time.
 
