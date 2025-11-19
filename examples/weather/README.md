@@ -1,4 +1,5 @@
 # Weather Display App
+![Weather Demo](../../docs/gifs/weather.gif)  
 This is a real-time weather and time display app for the device32 (ESP32-based board with OLED display). It shows current weather conditions and local time.
 
 ## Requirements
