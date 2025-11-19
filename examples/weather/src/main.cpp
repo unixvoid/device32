@@ -12,8 +12,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GAME_WIDTH 64
 #define GAME_HEIGHT 128
 
-const char* ssid = "test_ssid";
-const char* pass = "test_pass";
+const char* ssid = "Wokwi-GUEST";
+const char* pass = "";
 // Hardcoded for Omaha, NE
 const float latitude = 41.2565;
 const float longitude = -95.9345;
