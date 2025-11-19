@@ -598,6 +598,15 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    currentMode = (Mode)((currentMode + 1) % 4);
+    modeStartTime = now;
+    if (currentMode == SNAKE) reset_snake();
+    else if (currentMode == BRICK_BREAK) resetGame_brick();
+    else if (currentMode == LAVA_LAMP) resetBalls_lava();
+    else if (currentMode == BOIDS) initializeBoids_boids();
+    delay(200); // debounce
+  }
   if (now - modeStartTime >= MODE_DURATION) {
     currentMode = (Mode)((currentMode + 1) % 4);
     modeStartTime = now;
