@@ -8,7 +8,7 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-enum Mode { SNAKE, BRICK_BREAK, LAVA_LAMP, BOIDS };
+enum Mode { SNAKE, BRICK_BREAK, LAVA_LAMP, BOIDS, CAVES, MORPH, STARFIELD };
 Mode currentMode = SNAKE;
 unsigned long modeStartTime = 0;
 const unsigned long MODE_DURATION = 120000; // 2 minutes
@@ -583,6 +583,361 @@ void updateAllBoids_boids() {
     }
 }
 
+// Caves variables
+#define DUNGEON_WIDTH 64
+#define DUNGEON_HEIGHT 32
+#define CELL_SIZE 2
+#define CELL_WALL 0
+#define CELL_FLOOR 1
+#define CELL_CORRIDOR 2
+
+struct Room {
+  int x, y, w, h;
+};
+
+uint8_t dungeon[DUNGEON_HEIGHT][DUNGEON_WIDTH];
+std::vector<Room> rooms_caves;
+std::vector<std::pair<int, int>> drawQueue;
+
+void initDungeon() {
+  memset(dungeon, CELL_WALL, sizeof(dungeon));
+  rooms_caves.clear();
+  drawQueue.clear();
+}
+
+void createRoom(int x, int y, int w, int h) {
+  for (int dy = 0; dy < h; dy++) {
+    for (int dx = 0; dx < w; dx++) {
+      if (y + dy < DUNGEON_HEIGHT && x + dx < DUNGEON_WIDTH) {
+        dungeon[y + dy][x + dx] = CELL_FLOOR;
+      }
+    }
+  }
+  rooms_caves.push_back({x, y, w, h});
+}
+
+void tracePerimeter() {
+  drawQueue.clear();
+  std::vector<std::pair<int, int>> perimeter;
+  for (int y = 0; y < DUNGEON_HEIGHT; y++) {
+    for (int x = 0; x < DUNGEON_WIDTH; x++) {
+      if (dungeon[y][x] == CELL_WALL) {
+        bool isPerimeter = false;
+        if ((x > 0 && dungeon[y][x-1] != CELL_WALL) ||
+            (x < DUNGEON_WIDTH-1 && dungeon[y][x+1] != CELL_WALL) ||
+            (y > 0 && dungeon[y-1][x] != CELL_WALL) ||
+            (y < DUNGEON_HEIGHT-1 && dungeon[y+1][x] != CELL_WALL)) {
+          isPerimeter = true;
+        }
+        if (isPerimeter) {
+          perimeter.push_back(std::make_pair(x, y));
+        }
+      }
+    }
+  }
+  if (!perimeter.empty()) {
+    drawQueue.push_back(perimeter[0]);
+    std::set<std::pair<int, int>> visited;
+    visited.insert(perimeter[0]);
+    while ((int)visited.size() < (int)perimeter.size()) {
+      int cx = drawQueue.back().first;
+      int cy = drawQueue.back().second;
+      double minDist = 1e9;
+      int nextIdx = -1;
+      for (int i = 0; i < (int)perimeter.size(); i++) {
+        if (visited.find(perimeter[i]) == visited.end()) {
+          int dx = perimeter[i].first - cx;
+          int dy = perimeter[i].second - cy;
+          double dist = dx*dx + dy*dy;
+          if (dist < minDist) {
+            minDist = dist;
+            nextIdx = i;
+          }
+        }
+      }
+      if (nextIdx >= 0) {
+        drawQueue.push_back(perimeter[nextIdx]);
+        visited.insert(perimeter[nextIdx]);
+      } else {
+        break;
+      }
+    }
+  }
+}
+
+void createCorridor(int x1, int y1, int x2, int y2) {
+  int x = x1, y = y1;
+  while (x != x2) {
+    if (dungeon[y][x] != CELL_FLOOR) {
+      dungeon[y][x] = CELL_CORRIDOR;
+      drawQueue.push_back({x, y});
+    }
+    x += (x2 > x) ? 1 : -1;
+  }
+  while (y != y2) {
+    if (dungeon[y][x] != CELL_FLOOR) {
+      dungeon[y][x] = CELL_CORRIDOR;
+      drawQueue.push_back({x, y});
+    }
+    y += (y2 > y) ? 1 : -1;
+  }
+  if (dungeon[y][x] != CELL_FLOOR) {
+    dungeon[y][x] = CELL_CORRIDOR;
+    drawQueue.push_back({x, y});
+  }
+}
+
+void generateDungeon() {
+  initDungeon();
+  int numRooms = random(4, 7);
+  int attempts = 0;
+  int maxAttempts = 30;
+  while ((int)rooms_caves.size() < numRooms && attempts < maxAttempts) {
+    int w = random(6, 16);
+    int h = random(5, 14);
+    int x = random(1, DUNGEON_WIDTH - w - 1);
+    int y = random(1, DUNGEON_HEIGHT - h - 1);
+    bool overlaps = false;
+    for (int r = 0; r < (int)rooms_caves.size(); r++) {
+      int rx = rooms_caves[r].x, ry = rooms_caves[r].y, rw = rooms_caves[r].w, rh = rooms_caves[r].h;
+      if (!(x + w < rx || x > rx + rw || y + h < ry || y > ry + rh)) {
+        overlaps = true;
+        break;
+      }
+    }
+    if (!overlaps) {
+      createRoom(x, y, w, h);
+    }
+    attempts++;
+  }
+  for (int i = 0; i < (int)rooms_caves.size() - 1; i++) {
+    int x1 = rooms_caves[i].x + rooms_caves[i].w / 2;
+    int y1 = rooms_caves[i].y + rooms_caves[i].h / 2;
+    int x2 = rooms_caves[i + 1].x + rooms_caves[i + 1].w / 2;
+    int y2 = rooms_caves[i + 1].y + rooms_caves[i + 1].h / 2;
+    createCorridor(x1, y1, x2, y2);
+  }
+  tracePerimeter();
+}
+
+void progressiveDraw_caves(unsigned long drawTime) {
+  display.clearDisplay();
+  unsigned long startTime = millis();
+  int itemsDrawn = 0;
+  int totalItems = drawQueue.size();
+  while (itemsDrawn < totalItems) {
+    // Check for button press to interrupt drawing
+    if (digitalRead(BUTTON_PIN) == LOW) {
+      return;
+    }
+    unsigned long elapsed = millis() - startTime;
+    int itemsShouldBe = (int)((elapsed * totalItems) / drawTime);
+    itemsShouldBe = min(itemsShouldBe, totalItems);
+    while (itemsDrawn < itemsShouldBe) {
+      int x = drawQueue[itemsDrawn].first;
+      int y = drawQueue[itemsDrawn].second;
+      display.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE, SSD1306_WHITE);
+      itemsDrawn++;
+    }
+    display.display();
+    delay(10);
+  }
+}
+
+// Morph variables
+struct MorphBall {
+  float x, y, vx, vy, radius, radiusDrift;
+};
+
+#define MORPH_BALL_COUNT 5
+#define MORPH_MIN_RADIUS 5.0f
+#define MORPH_MAX_RADIUS 6.0f
+#define MORPH_MIN_SPEED 2.2f
+#define MORPH_MAX_SPEED 2.6f
+#define MORPH_FIELD_THRESHOLD 0.45f
+#define MORPH_MIN_DRIFT 0.005f
+#define MORPH_MAX_DRIFT 0.02f
+#define MORPH_GRAVITY 0.28f
+#define MORPH_MAX_VEL 3.2f
+#define MORPH_START_RADIUS 0.2f
+#define MORPH_RENDER_SKIP 4
+
+MorphBall morph_balls[MORPH_BALL_COUNT];
+float morph_fieldGrid[(SCREEN_HEIGHT + MORPH_RENDER_SKIP - 1) / MORPH_RENDER_SKIP][(SCREEN_WIDTH + MORPH_RENDER_SKIP - 1) / MORPH_RENDER_SKIP];
+
+float randomFloat_morph(float minValue, float maxValue) {
+  float scale = static_cast<float>(random(1000)) / 1000.0f;
+  return minValue + (maxValue - minValue) * scale;
+}
+
+void resetBalls_morph() {
+  for (int i = 0; i < MORPH_BALL_COUNT; ++i) {
+    morph_balls[i].radius = randomFloat_morph(MORPH_MIN_RADIUS, MORPH_MAX_RADIUS);
+    float angle = randomFloat_morph(0, 2 * PI);
+    float r = randomFloat_morph(0, MORPH_START_RADIUS);
+    morph_balls[i].x = 64.0f + r * cos(angle);
+    morph_balls[i].y = 32.0f + r * sin(angle);
+    morph_balls[i].vx = randomFloat_morph(-MORPH_MAX_SPEED, MORPH_MAX_SPEED);
+    morph_balls[i].vy = randomFloat_morph(-MORPH_MAX_SPEED, MORPH_MAX_SPEED);
+    if (fabs(morph_balls[i].vx) < MORPH_MIN_SPEED) {
+      morph_balls[i].vx = copysign(MORPH_MIN_SPEED, morph_balls[i].vx == 0 ? 1 : morph_balls[i].vx);
+    }
+    if (fabs(morph_balls[i].vy) < MORPH_MIN_SPEED) {
+      morph_balls[i].vy = copysign(MORPH_MIN_SPEED, morph_balls[i].vy == 0 ? 1 : morph_balls[i].vy);
+    }
+    float drift = randomFloat_morph(MORPH_MIN_DRIFT, MORPH_MAX_DRIFT);
+    morph_balls[i].radiusDrift = (random(0, 2) == 0) ? drift : -drift;
+  }
+}
+
+void updateBalls_morph() {
+  for (int i = 0; i < MORPH_BALL_COUNT; ++i) {
+    float dx = 64.0f - morph_balls[i].x;
+    float dy = 32.0f - morph_balls[i].y;
+    float dist = sqrt(dx * dx + dy * dy);
+    if (dist > 0) {
+      float ax = dx / dist * MORPH_GRAVITY;
+      float ay = dy / dist * MORPH_GRAVITY;
+      morph_balls[i].vx += ax;
+      morph_balls[i].vy += ay;
+    }
+    if (fabs(morph_balls[i].vx) > MORPH_MAX_VEL) morph_balls[i].vx = copysign(MORPH_MAX_VEL, morph_balls[i].vx);
+    if (fabs(morph_balls[i].vy) > MORPH_MAX_VEL) morph_balls[i].vy = copysign(MORPH_MAX_VEL, morph_balls[i].vy);
+    morph_balls[i].x += morph_balls[i].vx;
+    morph_balls[i].y += morph_balls[i].vy;
+    morph_balls[i].radius += morph_balls[i].radiusDrift;
+    if (morph_balls[i].radius <= MORPH_MIN_RADIUS) {
+      morph_balls[i].radius = MORPH_MIN_RADIUS;
+      morph_balls[i].radiusDrift = randomFloat_morph(MORPH_MIN_DRIFT, MORPH_MAX_DRIFT);
+    } else if (morph_balls[i].radius >= MORPH_MAX_RADIUS) {
+      morph_balls[i].radius = MORPH_MAX_RADIUS;
+      morph_balls[i].radiusDrift = -randomFloat_morph(MORPH_MIN_DRIFT, MORPH_MAX_DRIFT);
+    }
+    if (morph_balls[i].x - morph_balls[i].radius <= 0 || morph_balls[i].x + morph_balls[i].radius >= SCREEN_WIDTH) {
+      morph_balls[i].vx = -morph_balls[i].vx;
+      morph_balls[i].x = constrain(morph_balls[i].x, morph_balls[i].radius, SCREEN_WIDTH - morph_balls[i].radius);
+    }
+    if (morph_balls[i].y - morph_balls[i].radius <= 0 || morph_balls[i].y + morph_balls[i].radius >= SCREEN_HEIGHT) {
+      morph_balls[i].vy = -morph_balls[i].vy;
+      morph_balls[i].y = constrain(morph_balls[i].y, morph_balls[i].radius, SCREEN_HEIGHT - morph_balls[i].radius);
+    }
+  }
+}
+
+float sampleFieldAt_morph(int x, int y) {
+  float field = 0.0f;
+  for (int i = 0; i < MORPH_BALL_COUNT; ++i) {
+    float dx = static_cast<float>(x) - morph_balls[i].x;
+    float dy = static_cast<float>(y) - morph_balls[i].y;
+    float dist2 = dx * dx + dy * dy + 0.1f;
+    field += (morph_balls[i].radius * morph_balls[i].radius) / dist2;
+  }
+  return field;
+}
+
+void interpolateEdge_morph(float f1, float f2, int x1, int y1, int x2, int y2, int& ix, int& iy) {
+  float t = (MORPH_FIELD_THRESHOLD - f1) / (f2 - f1);
+  ix = x1 + static_cast<int>((x2 - x1) * t);
+  iy = y1 + static_cast<int>((y2 - y1) * t);
+}
+
+void renderMetaballs_morph() {
+  display.clearDisplay();
+  int kGridWidth_m = (SCREEN_WIDTH + MORPH_RENDER_SKIP - 1) / MORPH_RENDER_SKIP;
+  int kGridHeight_m = (SCREEN_HEIGHT + MORPH_RENDER_SKIP - 1) / MORPH_RENDER_SKIP;
+  
+  for (int gy = 0; gy < kGridHeight_m; ++gy) {
+    for (int gx = 0; gx < kGridWidth_m; ++gx) {
+      int sampleX = gx * MORPH_RENDER_SKIP + MORPH_RENDER_SKIP / 2;
+      int sampleY = gy * MORPH_RENDER_SKIP + MORPH_RENDER_SKIP / 2;
+      sampleX = min(sampleX, SCREEN_WIDTH - 1);
+      sampleY = min(sampleY, SCREEN_HEIGHT - 1);
+      morph_fieldGrid[gy][gx] = sampleFieldAt_morph(sampleX, sampleY);
+    }
+  }
+
+  for (int gy = 0; gy < kGridHeight_m - 1; ++gy) {
+    for (int gx = 0; gx < kGridWidth_m - 1; ++gx) {
+      int cellX = gx * MORPH_RENDER_SKIP + MORPH_RENDER_SKIP / 2;
+      int cellY = gy * MORPH_RENDER_SKIP + MORPH_RENDER_SKIP / 2;
+      float tl = morph_fieldGrid[gy][gx];
+      float tr = morph_fieldGrid[gy][gx + 1];
+      float bl = morph_fieldGrid[gy + 1][gx];
+      float br = morph_fieldGrid[gy + 1][gx + 1];
+      int caseIndex = (tl > MORPH_FIELD_THRESHOLD ? 8 : 0) |
+                      (tr > MORPH_FIELD_THRESHOLD ? 4 : 0) |
+                      (br > MORPH_FIELD_THRESHOLD ? 2 : 0) |
+                      (bl > MORPH_FIELD_THRESHOLD ? 1 : 0);
+      int px[4], py[4];
+      interpolateEdge_morph(tl, tr, cellX, cellY, cellX + MORPH_RENDER_SKIP, cellY, px[0], py[0]);
+      interpolateEdge_morph(tr, br, cellX + MORPH_RENDER_SKIP, cellY, cellX + MORPH_RENDER_SKIP, cellY + MORPH_RENDER_SKIP, px[1], py[1]);
+      interpolateEdge_morph(br, bl, cellX + MORPH_RENDER_SKIP, cellY + MORPH_RENDER_SKIP, cellX, cellY + MORPH_RENDER_SKIP, px[2], py[2]);
+      interpolateEdge_morph(bl, tl, cellX, cellY + MORPH_RENDER_SKIP, cellX, cellY, px[3], py[3]);
+      switch (caseIndex) {
+        case 1: display.drawLine(px[3], py[3], px[2], py[2], SSD1306_WHITE); break;
+        case 2: display.drawLine(px[1], py[1], px[2], py[2], SSD1306_WHITE); break;
+        case 3: display.drawLine(px[3], py[3], px[1], py[1], SSD1306_WHITE); break;
+        case 4: display.drawLine(px[0], py[0], px[1], py[1], SSD1306_WHITE); break;
+        case 5: display.drawLine(px[3], py[3], px[0], py[0], SSD1306_WHITE); display.drawLine(px[1], py[1], px[2], py[2], SSD1306_WHITE); break;
+        case 6: display.drawLine(px[0], py[0], px[2], py[2], SSD1306_WHITE); break;
+        case 7: display.drawLine(px[3], py[3], px[0], py[0], SSD1306_WHITE); break;
+        case 8: display.drawLine(px[0], py[0], px[3], py[3], SSD1306_WHITE); break;
+        case 9: display.drawLine(px[0], py[0], px[2], py[2], SSD1306_WHITE); break;
+        case 10: display.drawLine(px[0], py[0], px[3], py[3], SSD1306_WHITE); display.drawLine(px[1], py[1], px[2], py[2], SSD1306_WHITE); break;
+        case 11: display.drawLine(px[0], py[0], px[1], py[1], SSD1306_WHITE); break;
+        case 12: display.drawLine(px[3], py[3], px[1], py[1], SSD1306_WHITE); break;
+        case 13: display.drawLine(px[1], py[1], px[2], py[2], SSD1306_WHITE); break;
+        case 14: display.drawLine(px[3], py[3], px[2], py[2], SSD1306_WHITE); break;
+      }
+    }
+  }
+  display.display();
+}
+
+// Starfield variables
+#define NUM_STARS 100
+#define STAR_SPEED 0.01f
+#define STAR_SCALE 50.0f
+
+struct Star {
+    float x, y, z;
+};
+
+Star stars[NUM_STARS];
+
+void initializeStars() {
+    for (int i = 0; i < NUM_STARS; i++) {
+        stars[i].x = random(-1000, 1000) / 1000.0f;
+        stars[i].y = random(-1000, 1000) / 1000.0f;
+        stars[i].z = random(100, 1000) / 1000.0f;
+    }
+}
+
+void updateStars() {
+    for (int i = 0; i < NUM_STARS; i++) {
+        stars[i].z -= STAR_SPEED;
+        if (stars[i].z <= 0.0f) {
+            stars[i].x = random(-1000, 1000) / 1000.0f;
+            stars[i].y = random(-1000, 1000) / 1000.0f;
+            stars[i].z = 1.0f;
+        }
+    }
+}
+
+void drawStars() {
+    display.clearDisplay();
+    for (int i = 0; i < NUM_STARS; i++) {
+        float z = stars[i].z;
+        int sx = SCREEN_WIDTH / 2 + (int)(stars[i].x / z * STAR_SCALE);
+        int sy = SCREEN_HEIGHT / 2 + (int)(stars[i].y / z * STAR_SCALE);
+        if (sx >= 0 && sx < SCREEN_WIDTH && sy >= 0 && sy < SCREEN_HEIGHT) {
+            int size = (z < 0.5f) ? 2 : 1;
+            display.fillRect(sx, sy, size, size, SSD1306_WHITE);
+        }
+    }
+    display.display();
+}
+
 void setup() {
   Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
@@ -593,27 +948,36 @@ void setup() {
   resetGame_brick();
   resetBalls_lava();
   initializeBoids_boids();
+  generateDungeon();
+  resetBalls_morph();
+  initializeStars();
   modeStartTime = millis();
 }
 
 void loop() {
   unsigned long now = millis();
   if (digitalRead(BUTTON_PIN) == LOW) {
-    currentMode = (Mode)((currentMode + 1) % 4);
+    currentMode = (Mode)((currentMode + 1) % 7);
     modeStartTime = now;
     if (currentMode == SNAKE) reset_snake();
     else if (currentMode == BRICK_BREAK) resetGame_brick();
     else if (currentMode == LAVA_LAMP) resetBalls_lava();
     else if (currentMode == BOIDS) initializeBoids_boids();
+    else if (currentMode == CAVES) generateDungeon();
+    else if (currentMode == MORPH) resetBalls_morph();
+    else if (currentMode == STARFIELD) initializeStars();
     delay(200); // debounce
   }
   if (now - modeStartTime >= MODE_DURATION) {
-    currentMode = (Mode)((currentMode + 1) % 4);
+    currentMode = (Mode)((currentMode + 1) % 7);
     modeStartTime = now;
     if (currentMode == SNAKE) reset_snake();
     else if (currentMode == BRICK_BREAK) resetGame_brick();
     else if (currentMode == LAVA_LAMP) resetBalls_lava();
     else if (currentMode == BOIDS) initializeBoids_boids();
+    else if (currentMode == CAVES) generateDungeon();
+    else if (currentMode == MORPH) resetBalls_morph();
+    else if (currentMode == STARFIELD) initializeStars();
   }
   if (currentMode == SNAKE) {
     if (gameOver) {
@@ -738,5 +1102,34 @@ void loop() {
     updateAllBoids_boids();
     drawBoids_boids();
     delay(1);
+  } else if (currentMode == CAVES) {
+    progressiveDraw_caves(5000);
+    // If button was pressed, handle mode transition here
+    if (digitalRead(BUTTON_PIN) == LOW) {
+      currentMode = (Mode)((currentMode + 1) % 7);
+      modeStartTime = millis();
+      if (currentMode == SNAKE) reset_snake();
+      else if (currentMode == BRICK_BREAK) resetGame_brick();
+      else if (currentMode == LAVA_LAMP) resetBalls_lava();
+      else if (currentMode == BOIDS) initializeBoids_boids();
+      else if (currentMode == CAVES) generateDungeon();
+      else if (currentMode == MORPH) resetBalls_morph();
+      else if (currentMode == STARFIELD) initializeStars();
+      delay(200); // debounce
+      return;
+    }
+    delay(1000);
+    display.clearDisplay();
+    display.display();
+    delay(500);
+    generateDungeon();
+  } else if (currentMode == MORPH) {
+    updateBalls_morph();
+    renderMetaballs_morph();
+    delay(1);
+  } else if (currentMode == STARFIELD) {
+    updateStars();
+    drawStars();
+    delay(30);
   }
 }
