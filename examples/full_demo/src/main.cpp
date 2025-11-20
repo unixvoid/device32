@@ -12,6 +12,9 @@ enum Mode { SNAKE, BRICK_BREAK, LAVA_LAMP, BOIDS, CAVES, MORPH, STARFIELD };
 Mode currentMode = SNAKE;
 unsigned long modeStartTime = 0;
 const unsigned long MODE_DURATION = 120000; // 2 minutes
+bool autoPlayEnabled = true; // Start with auto-play on
+unsigned long buttonPressStartTime = 0;
+bool buttonWasPressed = false;
 
 // Snake variables
 typedef std::pair<int, int> Pos;
@@ -726,8 +729,10 @@ void progressiveDraw_caves(unsigned long drawTime) {
   int itemsDrawn = 0;
   int totalItems = drawQueue.size();
   while (itemsDrawn < totalItems) {
-    // Check for button press to interrupt drawing
+    // Allow button press to interrupt the drawing
     if (digitalRead(BUTTON_PIN) == LOW) {
+      buttonWasPressed = true;
+      buttonPressStartTime = millis();
       return;
     }
     unsigned long elapsed = millis() - startTime;
@@ -956,19 +961,41 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
+  
+  // Button handling for tap vs hold detection
   if (digitalRead(BUTTON_PIN) == LOW) {
-    currentMode = (Mode)((currentMode + 1) % 7);
-    modeStartTime = now;
-    if (currentMode == SNAKE) reset_snake();
-    else if (currentMode == BRICK_BREAK) resetGame_brick();
-    else if (currentMode == LAVA_LAMP) resetBalls_lava();
-    else if (currentMode == BOIDS) initializeBoids_boids();
-    else if (currentMode == CAVES) generateDungeon();
-    else if (currentMode == MORPH) resetBalls_morph();
-    else if (currentMode == STARFIELD) initializeStars();
-    delay(200); // debounce
+    if (!buttonWasPressed) {
+      // Button just pressed
+      buttonWasPressed = true;
+      buttonPressStartTime = now;
+    }
+  } else {
+    if (buttonWasPressed) {
+      // Button was released
+      unsigned long holdDuration = now - buttonPressStartTime;
+      if (holdDuration >= 3000) {
+        // Long hold (3+ seconds) - toggle auto-play
+        autoPlayEnabled = !autoPlayEnabled;
+        modeStartTime = now; // Reset timer when toggling
+      } else {
+        // Short tap - advance to next mode and disable auto-play
+        autoPlayEnabled = false; // Disable auto-play on tap
+        currentMode = (Mode)((currentMode + 1) % 7);
+        modeStartTime = now;
+        if (currentMode == SNAKE) reset_snake();
+        else if (currentMode == BRICK_BREAK) resetGame_brick();
+        else if (currentMode == LAVA_LAMP) resetBalls_lava();
+        else if (currentMode == BOIDS) initializeBoids_boids();
+        else if (currentMode == CAVES) generateDungeon();
+        else if (currentMode == MORPH) resetBalls_morph();
+        else if (currentMode == STARFIELD) initializeStars();
+      }
+      buttonWasPressed = false;
+    }
   }
-  if (now - modeStartTime >= MODE_DURATION) {
+  
+  // Auto-play advance if enabled
+  if (autoPlayEnabled && (now - modeStartTime >= MODE_DURATION)) {
     currentMode = (Mode)((currentMode + 1) % 7);
     modeStartTime = now;
     if (currentMode == SNAKE) reset_snake();
@@ -1104,20 +1131,6 @@ void loop() {
     delay(1);
   } else if (currentMode == CAVES) {
     progressiveDraw_caves(5000);
-    // If button was pressed, handle mode transition here
-    if (digitalRead(BUTTON_PIN) == LOW) {
-      currentMode = (Mode)((currentMode + 1) % 7);
-      modeStartTime = millis();
-      if (currentMode == SNAKE) reset_snake();
-      else if (currentMode == BRICK_BREAK) resetGame_brick();
-      else if (currentMode == LAVA_LAMP) resetBalls_lava();
-      else if (currentMode == BOIDS) initializeBoids_boids();
-      else if (currentMode == CAVES) generateDungeon();
-      else if (currentMode == MORPH) resetBalls_morph();
-      else if (currentMode == STARFIELD) initializeStars();
-      delay(200); // debounce
-      return;
-    }
     delay(1000);
     display.clearDisplay();
     display.display();
