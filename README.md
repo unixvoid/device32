@@ -27,6 +27,17 @@ This repository contains PlatformIO example projects and documentation for devic
    - If an example lacks a README, refer to the main repo README or PlatformIO docs for general ESP32 flashing guidance.
    - For issues, ensure your device32 is powered on and connected, and check the PlatformIO logs in VSCode's terminal.
 
+## Hardware Specs
+- MPU: Seed Xiao ESP32C3
+- Display: SSD1306/SSD1315 OLED
+- Button: Normally Open
+- Power-in/Flash: USB-C
+
+### Hardware Assignment
+- D5/GPIO3 -> Button
+- D6/GPIO4 -> OLED SCL
+- D7/GPIO5 -> OLED SDA
+
 ### Contributions
 See CONTRIBUTING.md for contribution guidelines and example creation guidance.
 
