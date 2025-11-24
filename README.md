@@ -11,19 +11,18 @@ This repository contains PlatformIO example projects and documentation for devic
 
 ## Getting started
 1. **Install Visual Studio Code (VSCode)**: Download and install VSCode from [https://code.visualstudio.com/](https://code.visualstudio.com/) if you haven't already.
-2. **Install the PlatformIO Extension**: Open VSCode, go to the Extensions view (Ctrl+Shift+X), search for "PlatformIO IDE", and install it. This extension provides the PlatformIO interface within VSCode.
-3. **Install Prerequisites**:
+2. **Install Prerequisites**:
    - Ensure Python 3.6+ is installed (PlatformIO requires it). Download from [https://www.python.org/](https://www.python.org/) if needed.
-4. **Clone the Repository**:
+3. **Clone the Repository**:
    ```
    git clone https://github.com/unixvoid/device32.git
    ```
-5. **Run an Example**:
-   - Each example in `examples/` is a separate PlatformIO project (with its own `platformio.ini`).
-   - Open an example folder (e.g., `examples/brick_break/`) in VSCode as a new window or via "File > Open Folder".
-   - Connect your device32 via USB and select the correct serial port in PlatformIO if prompted.
+4. **Pick an Example**: Choose one of the examples in `examples/` and open that directory in VSCode, for example if I wanted to load "morph" I would open `device32/examples/morph/` in VSCode
+5. **Install the PlatformIO Extension**: Once VSCode is open with the intended example, go to the Extensions view (Ctrl+Shift+X), search for "PlatformIO IDE", and install it. This extension provides the PlatformIO interface within VSCode.
+6. **Run an Example**:
+   - Connect your device32 via USB and select the correct serial port in PlatformIO.
    - Use the PlatformIO toolbar in VSCode to build (hammer icon) and flash (arrow icon) the project to your device32.
-6. **Additional Notes**:
+7. **Additional Notes**:
    - Check the `docs/` folder for hardware setup, wiring, and BOM details.
    - If an example lacks a README, refer to the main repo README or PlatformIO docs for general ESP32 flashing guidance.
    - For issues, ensure your device32 is powered on and connected, and check the PlatformIO logs in VSCode's terminal.
