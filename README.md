@@ -11,6 +11,7 @@ This repository contains PlatformIO example projects and documentation for devic
 - [docs/](https://github.com/unixvoid/device32/tree/main/docs/) — hardware, wiring, BOM, and enclosure notes
 
 ## Getting started
+Getting started with device32 is a straightforward process, we need to set up our IDE(VSCode) with the PlatformIO extension, clone down the repository, and then flash the device.
 1. **Install Visual Studio Code (VSCode)**: Download and install VSCode from [https://code.visualstudio.com/](https://code.visualstudio.com/) if you haven't already.
 2. **Install Prerequisites**:
    - Ensure Python 3.6+ is installed (PlatformIO requires it). Download from [https://www.python.org/](https://www.python.org/) if needed.
