@@ -6,6 +6,7 @@
 This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and select button on the back.
 
 ## Quick links
+- [full_demo](https://github.com/unixvoid/device32/tree/main/examples/full_demo) — Code that is shipped on device, also documentation on controls/features
 - [examples/](https://github.com/unixvoid/device32/tree/main/examples/) — PlatformIO projects with individual READMEs
 - [docs/](https://github.com/unixvoid/device32/tree/main/docs/) — hardware, wiring, BOM, and enclosure notes
 
