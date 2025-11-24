@@ -7,15 +7,17 @@
 #include "config.h"
 
 constexpr int kBallCount = 5;
-constexpr float kMinRadius = 5.0f;
-constexpr float kMaxRadius = 6.0f;
+constexpr float kMinRadius = 4.0f;
+constexpr float kMaxRadius = 7.0f;
 constexpr float kMinSpeed = 2.2f;
 constexpr float kMaxSpeed = 2.6f;
 constexpr float kFieldThreshold = 0.45f;
 constexpr float kMinRadiusDrift = 0.005f;
 constexpr float kMaxRadiusDrift = 0.02f;
-constexpr float kGravityStrength = 0.28f;
+constexpr float kGravityStrength = 0.30f;
 constexpr float kMaxVelocity = 3.2f;
+constexpr float kMaxImpulseStrength = 0.6f;
+constexpr int kMaxImpulseInterval = 20;
 constexpr float kStartRadius = 0.2f;
 constexpr unsigned long kFrameDelay = 0;
 constexpr int kRenderSkip = 4;
@@ -29,6 +31,9 @@ struct Ball {
   float vy;
   float radius;
   float radiusDrift;
+  int impulseCounter;
+  int currentInterval;
+  unsigned long startDelay;
 };
 
 static Ball balls[kBallCount];
@@ -64,11 +69,15 @@ void resetBalls() {
     }
     float drift = randomFloat(kMinRadiusDrift, kMaxRadiusDrift);
     balls[i].radiusDrift = (random(0, 2) == 0) ? drift : -drift;
+    balls[i].impulseCounter = 0;
+    balls[i].currentInterval = random(1, kMaxImpulseInterval + 1);
+    balls[i].startDelay = random(0, 2001);
   }
 }
 
 void updateBalls() {
   for (int i = 0; i < kBallCount; ++i) {
+    if (millis() < balls[i].startDelay) continue;
     // Apply gravity towards center
     float dx = 64.0f - balls[i].x;
     float dy = 32.0f - balls[i].y;
@@ -78,6 +87,16 @@ void updateBalls() {
       float ay = dy / dist * kGravityStrength;
       balls[i].vx += ax;
       balls[i].vy += ay;
+    }
+    // Apply random impulse at random intervals
+    balls[i].impulseCounter++;
+    if (balls[i].impulseCounter >= balls[i].currentInterval) {
+      balls[i].impulseCounter = 0;
+      balls[i].currentInterval = random(1, kMaxImpulseInterval + 1);
+      float randomAngle = randomFloat(0, 2 * PI);
+      float randomMag = randomFloat(0, kMaxImpulseStrength);
+      balls[i].vx += randomMag * cos(randomAngle);
+      balls[i].vy += randomMag * sin(randomAngle);
     }
     // Cap velocity to prevent runaway
     if (fabs(balls[i].vx) > kMaxVelocity) balls[i].vx = copysign(kMaxVelocity, balls[i].vx);

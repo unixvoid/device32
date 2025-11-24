@@ -752,18 +752,23 @@ void progressiveDraw_caves(unsigned long drawTime) {
 // Morph variables
 struct MorphBall {
   float x, y, vx, vy, radius, radiusDrift;
+  int impulseCounter;
+  int currentInterval;
+  unsigned long startDelay;
 };
 
 #define MORPH_BALL_COUNT 5
-#define MORPH_MIN_RADIUS 5.0f
-#define MORPH_MAX_RADIUS 6.0f
+#define MORPH_MIN_RADIUS 4.0f
+#define MORPH_MAX_RADIUS 7.0f
 #define MORPH_MIN_SPEED 2.2f
 #define MORPH_MAX_SPEED 2.6f
 #define MORPH_FIELD_THRESHOLD 0.45f
 #define MORPH_MIN_DRIFT 0.005f
 #define MORPH_MAX_DRIFT 0.02f
-#define MORPH_GRAVITY 0.28f
+#define MORPH_GRAVITY 0.30f
 #define MORPH_MAX_VEL 3.2f
+#define MORPH_MAX_IMPULSE_STRENGTH 0.6f
+#define MORPH_MAX_IMPULSE_INTERVAL 20
 #define MORPH_START_RADIUS 0.2f
 #define MORPH_RENDER_SKIP 4
 
@@ -792,11 +797,15 @@ void resetBalls_morph() {
     }
     float drift = randomFloat_morph(MORPH_MIN_DRIFT, MORPH_MAX_DRIFT);
     morph_balls[i].radiusDrift = (random(0, 2) == 0) ? drift : -drift;
+    morph_balls[i].impulseCounter = 0;
+    morph_balls[i].currentInterval = random(1, MORPH_MAX_IMPULSE_INTERVAL + 1);
+    morph_balls[i].startDelay = random(0, 2001);
   }
 }
 
 void updateBalls_morph() {
   for (int i = 0; i < MORPH_BALL_COUNT; ++i) {
+    if (millis() < morph_balls[i].startDelay) continue;
     float dx = 64.0f - morph_balls[i].x;
     float dy = 32.0f - morph_balls[i].y;
     float dist = sqrt(dx * dx + dy * dy);
@@ -805,6 +814,15 @@ void updateBalls_morph() {
       float ay = dy / dist * MORPH_GRAVITY;
       morph_balls[i].vx += ax;
       morph_balls[i].vy += ay;
+    }
+    morph_balls[i].impulseCounter++;
+    if (morph_balls[i].impulseCounter >= morph_balls[i].currentInterval) {
+      morph_balls[i].impulseCounter = 0;
+      morph_balls[i].currentInterval = random(1, MORPH_MAX_IMPULSE_INTERVAL + 1);
+      float randomAngle = randomFloat_morph(0, 2 * PI);
+      float randomMag = randomFloat_morph(0, MORPH_MAX_IMPULSE_STRENGTH);
+      morph_balls[i].vx += randomMag * cos(randomAngle);
+      morph_balls[i].vy += randomMag * sin(randomAngle);
     }
     if (fabs(morph_balls[i].vx) > MORPH_MAX_VEL) morph_balls[i].vx = copysign(MORPH_MAX_VEL, morph_balls[i].vx);
     if (fabs(morph_balls[i].vy) > MORPH_MAX_VEL) morph_balls[i].vy = copysign(MORPH_MAX_VEL, morph_balls[i].vy);
