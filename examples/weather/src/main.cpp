@@ -12,9 +12,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GAME_WIDTH 64
 #define GAME_HEIGHT 128
 
-const char* ssid = "Wokwi-GUEST";
-const char* pass = "";
-// Hardcoded for Omaha, NE
+// Update to your WiFi creds!
+//const char* ssid = "Wokwi-GUEST";
+//const char* pass = "";
+const char* ssid = "kame house";
+const char* pass = "spacedicks";
+// Update to your location!
+//   Default for Omaha, NE
 const float latitude = 41.2565;
 const float longitude = -95.9345;
 
@@ -23,6 +27,9 @@ const float longitude = -95.9345;
 // Auto-detected from IP, defaults for Central Time
 int gmtOffset_sec = -6 * 3600;
 int daylightOffset_sec = 3600;
+
+// Time format: true for 12-hour, false for 24-hour
+bool use12HourFormat = true;
 
 void detectTimezone() {
   if (WiFi.status() != WL_CONNECTED) return;
@@ -50,6 +57,82 @@ void detectTimezone() {
 String weatherDescription = "";
 float temperature = 0.0;
 String currentTime = "";
+
+int drawCenteredText(String text, int y, int textSize, int maxWidth) {
+  display.setTextSize(textSize);
+  display.setTextColor(SSD1306_WHITE);
+  
+  int16_t x1, y1;
+  uint16_t w, h;
+  
+  display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+  
+  // Calculate width using character count for default font (6 pixels per char)
+  int charWidth = text.length() * 6 * textSize;
+  // Use the larger of the two widths for the wrapping check
+  int checkW = (charWidth > w) ? charWidth : w;
+
+  if (checkW <= maxWidth) {
+    int x = (maxWidth - w) / 2;
+    display.setCursor(x, y);
+    display.println(text);
+    return h;
+  }
+  
+  // Split text into words
+  String words[10];
+  int wordCount = 0;
+  int startIndex = 0;
+  int spaceIndex;
+  
+  while ((spaceIndex = text.indexOf(' ', startIndex)) != -1 && wordCount < 10) {
+    words[wordCount++] = text.substring(startIndex, spaceIndex);
+    startIndex = spaceIndex + 1;
+  }
+  if (startIndex < text.length() && wordCount < 10) {
+    words[wordCount++] = text.substring(startIndex);
+  }
+  
+  // Build lines without breaking words
+  String lines[5]; // Max 5 lines
+  int lineCount = 0;
+  String currentLine = "";
+  
+  for (int i = 0; i < wordCount; i++) {
+    String testLine = currentLine + (currentLine.length() > 0 ? " " : "") + words[i];
+    
+    // Check width of test line using conservative estimate
+    int testW = testLine.length() * 6 * textSize;
+    
+    if (testW <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine.length() > 0) {
+        lines[lineCount++] = currentLine;
+        currentLine = words[i];
+      } else {
+        lines[lineCount++] = words[i];
+        currentLine = "";
+      }
+    }
+  }
+  
+  if (currentLine.length() > 0 && lineCount < 5) {
+    lines[lineCount++] = currentLine;
+  }
+  
+  // Draw each line centered
+  int currentY = y;
+  for (int i = 0; i < lineCount; i++) {
+    display.getTextBounds(lines[i], 0, 0, &x1, &y1, &w, &h);
+    int x = (maxWidth - w) / 2;
+    display.setCursor(x, currentY);
+    display.println(lines[i]);
+    currentY += h + 2;
+  }
+  
+  return currentY - y;
+}
 
 String getWeatherDescription(int code) {
   switch (code) {
@@ -85,10 +168,92 @@ String getWeatherDescription(int code) {
   }
 }
 
+void showBootScreen() {
+  display.clearDisplay();
+  
+  // Show device32 boot logo with border
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  String bootText = "device32";
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTextBounds(bootText, 0, 0, &x1, &y1, &w, &h);
+  
+  int textX = (GAME_WIDTH - w) / 2;
+  int textY = (GAME_HEIGHT - h) / 2;
+  
+  // Draw border around text
+  int padding = 6;
+  int rectX = textX - padding;
+  int rectY = textY - padding;
+  int rectW = w + (padding * 2);
+  int rectH = h + (padding * 2);
+  display.drawRoundRect(rectX, rectY, rectW, rectH, 3, SSD1306_WHITE);
+  
+  display.setCursor(textX, textY);
+  display.println(bootText);
+  
+  display.display();
+  delay(800);
+}
+
 void connectToWiFi() {
   WiFi.begin(ssid, pass);
+  
+  int dotCount = 0;
+  int direction = 1;
+  unsigned long lastDotUpdate = 0;
+  
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
+    unsigned long currentMillis = millis();
+    
+    // Update dots every 500ms
+    if (currentMillis - lastDotUpdate >= 500) {
+      display.clearDisplay();
+      
+      String connectingText = "WiFi";
+      for (int i = 0; i < dotCount; i++) {
+        connectingText += ".";
+      }
+      
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      
+      int16_t x1, y1;
+      uint16_t w, h;
+      display.getTextBounds(connectingText, 0, 0, &x1, &y1, &w, &h);
+      
+      int textX = (GAME_WIDTH - w) / 2;
+      int textY = (GAME_HEIGHT - h) / 2;
+      
+      String maxText = "WiFi...";
+      display.getTextBounds(maxText, 0, 0, &x1, &y1, &w, &h);
+      int maxTextX = (GAME_WIDTH - w) / 2;
+      
+      int padding = 4;
+      int rectX = maxTextX - padding;
+      int rectY = textY - padding;
+      int rectW = w + (padding * 2);
+      int rectH = h + (padding * 2);
+      display.drawRoundRect(rectX, rectY, rectW, rectH, 2, SSD1306_WHITE);
+      
+      display.setCursor(textX, textY);
+      display.println(connectingText);
+      
+      display.display();
+      
+      dotCount += direction;
+      if (dotCount >= 3) {
+        direction = -1; // Start decreasing
+      } else if (dotCount <= 0) {
+        direction = 1;  // Start increasing
+      }
+      
+      lastDotUpdate = currentMillis;
+    }
+    
+    delay(100);
   }
 }
 
@@ -126,8 +291,21 @@ void updateTime() {
     return;
   }
   char buffer[20];
-  strftime(buffer, sizeof(buffer), "%H:%M", &timeinfo);
-  currentTime = String(buffer);
+  if (use12HourFormat) {
+    strftime(buffer, sizeof(buffer), "%I:%M", &timeinfo);
+    currentTime = String(buffer);
+    // Remove leading zero from hour
+    if (currentTime[0] == '0') {
+      currentTime = currentTime.substring(1);
+    }
+  } else {
+    strftime(buffer, sizeof(buffer), "%H:%M", &timeinfo);
+    currentTime = String(buffer);
+    // Remove leading zero from hour
+    if (currentTime[0] == '0') {
+      currentTime = currentTime.substring(1);
+    }
+  }
 }
 
 void setup() {
@@ -139,6 +317,9 @@ void setup() {
   display.setRotation(1); // Rotate 90 degrees for vertical orientation
   display.clearDisplay();
   display.display();
+
+  // Show boot screen
+  showBootScreen();
 
   connectToWiFi();
 
@@ -168,48 +349,97 @@ void loop() {
 
   // Draw display
   display.clearDisplay();
-  display.drawRoundRect(0, 0, GAME_WIDTH, GAME_HEIGHT, 4, SSD1306_WHITE);
 
-  // Weather on top
+  // Time on top
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   int16_t x1, y1;
   uint16_t w, h;
 
-  String weatherLabel = "Weather:";
+  String timeLabel = "Time";
+  display.getTextBounds(timeLabel, 0, 0, &x1, &y1, &w, &h);
+  int timeLabelX = (GAME_WIDTH - w) / 2;
+  int timeLabelY = 5;
+  
+  // Draw border
+  int timeBoxPadding = 3;
+  int timeBoxX = 0;
+  int timeBoxY = timeLabelY - timeBoxPadding;
+  int timeBoxW = GAME_WIDTH;
+  int timeBoxH = h + (timeBoxPadding * 2);
+  display.drawRoundRect(timeBoxX, timeBoxY, timeBoxW, timeBoxH, 2, SSD1306_WHITE);
+  
+  display.setCursor(timeLabelX, timeLabelY);
+  display.println(timeLabel);
+
+  display.setTextSize(1);  // Changed from size 2 to size 1
+  display.getTextBounds(currentTime, 0, 0, &x1, &y1, &w, &h);
+  int timeX = (GAME_WIDTH - w) / 2;
+  display.setCursor(timeX, 20);
+  display.println(currentTime);
+
+  // Date closer to time
+  display.setTextSize(1);
+  String dateLabel = "Date";
+  display.getTextBounds(dateLabel, 0, 0, &x1, &y1, &w, &h);
+  int dateLabelX = (GAME_WIDTH - w) / 2;
+  int dateLabelY = 40;
+  
+  // Draw border
+  int dateBoxPadding = 3;
+  int dateBoxX = 0;
+  int dateBoxY = dateLabelY - dateBoxPadding;
+  int dateBoxW = GAME_WIDTH;
+  int dateBoxH = h + (dateBoxPadding * 2);
+  display.drawRoundRect(dateBoxX, dateBoxY, dateBoxW, dateBoxH, 2, SSD1306_WHITE);
+  
+  display.setCursor(dateLabelX, dateLabelY);
+  display.println(dateLabel);
+
+  // Get current date
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo)) {
+    char dateBuffer[20];
+    strftime(dateBuffer, sizeof(dateBuffer), "%m/%d/%Y", &timeinfo);
+    String currentDate = String(dateBuffer);
+    
+    display.getTextBounds(currentDate, 0, 0, &x1, &y1, &w, &h);
+    int dateX = (GAME_WIDTH - w) / 2;
+    display.setCursor(dateX, 55);
+    display.println(currentDate);
+  }
+
+  // Weather closer to date
+  display.setTextSize(1);
+  String weatherLabel = "Weather";
   display.getTextBounds(weatherLabel, 0, 0, &x1, &y1, &w, &h);
-  int x = (GAME_WIDTH - w) / 2;
-  display.setCursor(x, 10);
+  int weatherLabelX = (GAME_WIDTH - w) / 2;
+  int weatherLabelY = 80;
+  
+  // Draw rounded box around weather label
+  int boxPadding = 3;
+  int boxX = 0;
+  int boxY = weatherLabelY - boxPadding;
+  int boxW = GAME_WIDTH;
+  int boxH = h + (boxPadding * 2);
+  display.drawRoundRect(boxX, boxY, boxW, boxH, 2, SSD1306_WHITE);
+  
+  display.setCursor(weatherLabelX, weatherLabelY);
   display.println(weatherLabel);
 
   String desc = weatherDescription.length() == 0 ? "Loading weather..." : weatherDescription;
-  display.getTextBounds(desc, 0, 0, &x1, &y1, &w, &h);
-  x = (GAME_WIDTH - w) / 2;
-  display.setCursor(x, 25);
-  display.println(desc);
+  int weatherHeight = drawCenteredText(desc, 95, 1, GAME_WIDTH);
 
   String tempStr = (temperature == 0.0 && weatherDescription.length() == 0) ? "" : String((int)temperature) + " F";
   if (tempStr != "") {
-    display.setTextSize(2);
+    display.setTextSize(1);  // Changed from size 2 to size 1
     display.getTextBounds(tempStr, 0, 0, &x1, &y1, &w, &h);
-    x = (GAME_WIDTH - w) / 2;
-    display.setCursor(x, 45);
+    int tempX = (GAME_WIDTH - w) / 2;
+    int tempY = 93 + weatherHeight + 8;
+    display.setCursor(tempX, tempY);
     display.println(tempStr);
     display.setTextSize(1);
   }
-
-  // Time on bottom
-  String timeLabel = "Time:";
-  display.getTextBounds(timeLabel, 0, 0, &x1, &y1, &w, &h);
-  x = (GAME_WIDTH - w) / 2;
-  display.setCursor(x, 85);
-  display.println(timeLabel);
-
-  display.setTextSize(2);
-  display.getTextBounds(currentTime, 0, 0, &x1, &y1, &w, &h);
-  x = (GAME_WIDTH - w) / 2;
-  display.setCursor(x, 100);
-  display.println(currentTime);
 
   display.display();
 
