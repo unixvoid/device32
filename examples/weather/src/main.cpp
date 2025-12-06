@@ -12,11 +12,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GAME_WIDTH 64
 #define GAME_HEIGHT 128
 
-// Update to your WiFi creds!
-//const char* ssid = "Wokwi-GUEST";
-//const char* pass = "";
-const char* ssid = "kame house";
-const char* pass = "spacedicks";
+// Update to your WiFi creds!WiFi
+const char* ssid = "Wokwi-GUEST";
+const char* pass = "";
 // Update to your location!
 //   Default for Omaha, NE
 const float latitude = 41.2565;
@@ -201,8 +199,7 @@ void showBootScreen() {
 void connectToWiFi() {
   WiFi.begin(ssid, pass);
   
-  int dotCount = 0;
-  int direction = 1;
+  int step = 0;
   unsigned long lastDotUpdate = 0;
   
   while (WiFi.status() != WL_CONNECTED) {
@@ -212,6 +209,7 @@ void connectToWiFi() {
     if (currentMillis - lastDotUpdate >= 500) {
       display.clearDisplay();
       
+      int dotCount = step % 4;
       String connectingText = "WiFi";
       for (int i = 0; i < dotCount; i++) {
         connectingText += ".";
@@ -243,12 +241,7 @@ void connectToWiFi() {
       
       display.display();
       
-      dotCount += direction;
-      if (dotCount >= 3) {
-        direction = -1; // Start decreasing
-      } else if (dotCount <= 0) {
-        direction = 1;  // Start increasing
-      }
+      step = (step + 1) % 4;
       
       lastDotUpdate = currentMillis;
     }
