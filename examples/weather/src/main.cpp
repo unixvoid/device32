@@ -12,11 +12,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GAME_WIDTH 64
 #define GAME_HEIGHT 128
 
-<<<<<<< HEAD
 // Update to your WiFi creds!
-=======
 // Update to your WiFi creds!WiFi
->>>>>>> 244d333fa4bbc19a70c6801e113378fdfa81c1df
 const char* ssid = "Wokwi-GUEST";
 const char* pass = "";
 // Update to your location!
