@@ -13,10 +13,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GAME_HEIGHT 128
 
 // Update to your WiFi creds!
-//const char* ssid = "Wokwi-GUEST";
-//const char* pass = "";
-const char* ssid = "kame house";
-const char* pass = "spacedicks";
+const char* ssid = "Wokwi-GUEST";
+const char* pass = "";
 // Update to your location!
 //   Default for Omaha, NE
 const float latitude = 41.2565;
@@ -67,7 +65,7 @@ int drawCenteredText(String text, int y, int textSize, int maxWidth) {
   
   display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
   
-  // Calculate width using character count for default font (6 pixels per char)
+  // Calculate width using character count
   int charWidth = text.length() * 6 * textSize;
   // Use the larger of the two widths for the wrapping check
   int checkW = (charWidth > w) ? charWidth : w;
@@ -349,6 +347,7 @@ void loop() {
 
   // Draw display
   display.clearDisplay();
+  display.drawRoundRect(0, 0, GAME_WIDTH, GAME_HEIGHT, 4, SSD1306_WHITE);
 
   // Time on top
   display.setTextSize(1);
@@ -358,50 +357,60 @@ void loop() {
 
   String timeLabel = "Time";
   display.getTextBounds(timeLabel, 0, 0, &x1, &y1, &w, &h);
-  int timeLabelX = (GAME_WIDTH - w) / 2;
   int timeLabelY = 5;
-  
-  // Draw border
-  int timeBoxPadding = 3;
-  int timeBoxX = 0;
+  int timeBoxW = 56;
+  int timeBoxPadding = 2;
+  int timeBoxX = (GAME_WIDTH - timeBoxW) / 2;
   int timeBoxY = timeLabelY - timeBoxPadding;
-  int timeBoxW = GAME_WIDTH;
   int timeBoxH = h + (timeBoxPadding * 2);
-  display.drawRoundRect(timeBoxX, timeBoxY, timeBoxW, timeBoxH, 2, SSD1306_WHITE);
+  display.fillRoundRect(timeBoxX, timeBoxY, timeBoxW, timeBoxH, 2, SSD1306_WHITE);
   
+  int timeLabelX = timeBoxX + (timeBoxW - w) / 2;
+  display.setTextColor(SSD1306_BLACK);
   display.setCursor(timeLabelX, timeLabelY);
   display.println(timeLabel);
+  display.setTextColor(SSD1306_WHITE);
 
-  display.setTextSize(1);  // Changed from size 2 to size 1
+  display.setTextSize(2);
   display.getTextBounds(currentTime, 0, 0, &x1, &y1, &w, &h);
   int timeX = (GAME_WIDTH - w) / 2;
   display.setCursor(timeX, 20);
   display.println(currentTime);
 
-  // Date closer to time
   display.setTextSize(1);
   String dateLabel = "Date";
   display.getTextBounds(dateLabel, 0, 0, &x1, &y1, &w, &h);
-  int dateLabelX = (GAME_WIDTH - w) / 2;
   int dateLabelY = 40;
-  
-  // Draw border
-  int dateBoxPadding = 3;
-  int dateBoxX = 0;
+  int dateBoxW = 56;
+  int dateBoxPadding = 2;
+  int dateBoxX = (GAME_WIDTH - dateBoxW) / 2;
   int dateBoxY = dateLabelY - dateBoxPadding;
-  int dateBoxW = GAME_WIDTH;
   int dateBoxH = h + (dateBoxPadding * 2);
-  display.drawRoundRect(dateBoxX, dateBoxY, dateBoxW, dateBoxH, 2, SSD1306_WHITE);
+  display.fillRoundRect(dateBoxX, dateBoxY, dateBoxW, dateBoxH, 2, SSD1306_WHITE);
   
+  int dateLabelX = dateBoxX + (dateBoxW - w) / 2;
+  display.setTextColor(SSD1306_BLACK);
   display.setCursor(dateLabelX, dateLabelY);
   display.println(dateLabel);
+  display.setTextColor(SSD1306_WHITE);
 
   // Get current date
   struct tm timeinfo;
   if (getLocalTime(&timeinfo)) {
     char dateBuffer[20];
-    strftime(dateBuffer, sizeof(dateBuffer), "%m/%d/%Y", &timeinfo);
+    strftime(dateBuffer, sizeof(dateBuffer), "%a %b %d", &timeinfo);
     String currentDate = String(dateBuffer);
+    // Remove leading zero from day
+    int spacePos = currentDate.lastIndexOf(' ');
+    if (spacePos != -1 && currentDate[spacePos + 1] == '0') {
+      currentDate.remove(spacePos + 1, 1);
+    }
+    // Uppercase only the first letter of the month
+    int firstSpace = currentDate.indexOf(' ');
+    int secondSpace = currentDate.indexOf(' ', firstSpace + 1);
+    if (firstSpace != -1 && secondSpace != -1) {
+      currentDate[firstSpace + 1] = toupper(currentDate[firstSpace + 1]);
+    }
     
     display.getTextBounds(currentDate, 0, 0, &x1, &y1, &w, &h);
     int dateX = (GAME_WIDTH - w) / 2;
@@ -409,35 +418,44 @@ void loop() {
     display.println(currentDate);
   }
 
-  // Weather closer to date
   display.setTextSize(1);
   String weatherLabel = "Weather";
   display.getTextBounds(weatherLabel, 0, 0, &x1, &y1, &w, &h);
-  int weatherLabelX = (GAME_WIDTH - w) / 2;
-  int weatherLabelY = 80;
-  
-  // Draw rounded box around weather label
-  int boxPadding = 3;
-  int boxX = 0;
+  int weatherLabelY = 68;
+  int weatherBoxW = 56;
+  int boxPadding = 2;
+  int boxX = (GAME_WIDTH - weatherBoxW) / 2;
   int boxY = weatherLabelY - boxPadding;
-  int boxW = GAME_WIDTH;
   int boxH = h + (boxPadding * 2);
-  display.drawRoundRect(boxX, boxY, boxW, boxH, 2, SSD1306_WHITE);
+  display.fillRoundRect(boxX, boxY, weatherBoxW, boxH, 2, SSD1306_WHITE);
   
+  int weatherLabelX = boxX + (weatherBoxW - w) / 2;
+  display.setTextColor(SSD1306_BLACK);
   display.setCursor(weatherLabelX, weatherLabelY);
   display.println(weatherLabel);
+  display.setTextColor(SSD1306_WHITE);
 
   String desc = weatherDescription.length() == 0 ? "Loading weather..." : weatherDescription;
-  int weatherHeight = drawCenteredText(desc, 95, 1, GAME_WIDTH);
+  if (desc.length() > 25) desc = desc.substring(0, 25) + "...";
+  int weatherHeight = drawCenteredText(desc, 85, 1, GAME_WIDTH);
 
-  String tempStr = (temperature == 0.0 && weatherDescription.length() == 0) ? "" : String((int)temperature) + " F";
+  String tempStr = (temperature == 0.0 && weatherDescription.length() == 0) ? "" : String((int)temperature);
   if (tempStr != "") {
-    display.setTextSize(1);  // Changed from size 2 to size 1
-    display.getTextBounds(tempStr, 0, 0, &x1, &y1, &w, &h);
-    int tempX = (GAME_WIDTH - w) / 2;
-    int tempY = 93 + weatherHeight + 8;
-    display.setCursor(tempX, tempY);
-    display.println(tempStr);
+    int tempY = 80 + weatherHeight + 8;
+    if (weatherHeight <= 10) tempY += 6;
+    display.setTextSize(2);
+    uint16_t numW, fW, th;
+    display.getTextBounds(tempStr, 0, 0, &x1, &y1, &numW, &th);
+    display.setTextSize(1);
+    display.getTextBounds("F", 0, 0, &x1, &y1, &fW, &th);
+    int totalW = numW + fW;
+    int startX = (GAME_WIDTH - totalW) / 2;
+    display.setTextSize(2);
+    display.setCursor(startX, tempY);
+    display.print(tempStr);
+    display.setTextSize(1);
+    display.setCursor(startX + numW + 2, tempY + 6);
+    display.print("F");
     display.setTextSize(1);
   }
 
