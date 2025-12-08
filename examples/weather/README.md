@@ -32,9 +32,10 @@ Edit the constants at the top of `src/main.cpp` to customize:
 ## Usage
 - Power on the device—it will connect to WiFi, detect timezone, and start displaying weather and time.
 - The display shows:
-  - Weather label and description (e.g., "Clear sky")
+  - Current time in HH:MM format (e.g., "13:03")
+  - Current date (e.g., "Dec 8")
+  - Weather description (e.g., "Clear sky")
   - Temperature in Fahrenheit (e.g., "45 F")
-  - Time in HH:MM format (e.g., "13:03")
 - No user controls needed; it's fully automatic.
 
 ## Notes
