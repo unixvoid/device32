@@ -29,6 +29,12 @@ Getting started with device32 is a straightforward process, we need to set up ou
    - If an example lacks a README, refer to the main repo README or PlatformIO docs for general ESP32 flashing guidance.
    - For issues, ensure your device32 is powered on and connected, and check the PlatformIO logs in VSCode's terminal.
 
+## Online Demo
+
+There's an online demo available on Wokwi that simulates the full device32 hardware, allowing you to write and test code without physical hardware. Note that in the Wokwi demo, the screen is rotated 90 degrees clockwise compared to the actual device. Also the physical device32 runs code much faster than the Wokwi simulator, but its good for getting started.
+
+[Try the demo on Wokwi](https://wokwi.com/projects/450965011609303041)
+
 ## Hardware Specs
 - MPU: Seed Xiao ESP32C3
 - Display: SSD1306/SSD1315 OLED
