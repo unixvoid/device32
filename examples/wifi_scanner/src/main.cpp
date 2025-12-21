@@ -275,12 +275,13 @@ void loop() {
       if (current_index < aps.size()) {
         AP ap = aps[current_index];
         int y = 5;
-        // SSID
-        String label_ssid = detail_index == 0 ? ">SSID" : "SSID";
         int16_t x1, y1;
         uint16_t w, h;
+        int center_x;
+        // SSID
+        String label_ssid = detail_index == 0 ? ">SSID" : "SSID";
         display.getTextBounds(label_ssid, 0, 0, &x1, &y1, &w, &h);
-        int center_x = (GAME_WIDTH - w) / 2;
+        center_x = (GAME_WIDTH - w) / 2;
         display.setCursor(center_x, y);
         display.printf("%s", label_ssid.c_str());
         display.setCursor(center_x + 1, y);
@@ -289,6 +290,9 @@ void loop() {
         display.setCursor(5, y);
         String ssid_val = ap.ssid;
         String display_ssid = (detail_index == 0 && ssid_val.length() > 9) ? ssid_val.substring(scroll_pos, scroll_pos + 9) : ssid_val;
+        display.getTextBounds(display_ssid, 0, 0, &x1, &y1, &w, &h);
+        center_x = (GAME_WIDTH - w) / 2;
+        display.setCursor(center_x, y);
         display.printf("%s", display_ssid.c_str());
         y += 10;
         // BSSID
@@ -303,6 +307,9 @@ void loop() {
         display.setCursor(5, y);
         String bssid_val = ap.bssid;
         String display_bssid = (detail_index == 1 && bssid_val.length() > 9) ? bssid_val.substring(scroll_pos, scroll_pos + 9) : bssid_val;
+        display.getTextBounds(display_bssid, 0, 0, &x1, &y1, &w, &h);
+        center_x = (GAME_WIDTH - w) / 2;
+        display.setCursor(center_x, y);
         display.printf("%s", display_bssid.c_str());
         y += 10;
         // RSSI
@@ -316,10 +323,13 @@ void loop() {
         y += 10;
         display.setCursor(5, y);
         String rssi_str = String(ap.rssi);
+        display.getTextBounds(rssi_str, 0, 0, &x1, &y1, &w, &h);
+        center_x = (GAME_WIDTH - w) / 2;
+        display.setCursor(center_x, y);
         display.printf("%s", rssi_str.c_str());
         y += 10;
         // Channel
-        String label_ch = detail_index == 3 ? ">Ch" : "Ch";
+        String label_ch = detail_index == 3 ? ">Channel" : "Channel";
         display.getTextBounds(label_ch, 0, 0, &x1, &y1, &w, &h);
         center_x = (GAME_WIDTH - w) / 2;
         display.setCursor(center_x, y);
@@ -329,10 +339,13 @@ void loop() {
         y += 10;
         display.setCursor(5, y);
         String ch_str = String(ap.channel);
+        display.getTextBounds(ch_str, 0, 0, &x1, &y1, &w, &h);
+        center_x = (GAME_WIDTH - w) / 2;
+        display.setCursor(center_x, y);
         display.printf("%s", ch_str.c_str());
         y += 10;
         // Encryption
-        String label_enc = detail_index == 4 ? ">Enc" : "Enc";
+        String label_enc = detail_index == 4 ? ">Encryption" : "Encryption";
         display.getTextBounds(label_enc, 0, 0, &x1, &y1, &w, &h);
         center_x = (GAME_WIDTH - w) / 2;
         display.setCursor(center_x, y);
@@ -355,6 +368,9 @@ void loop() {
           default: enc_str = "Unknown"; break;
         }
         String display_enc = (detail_index == 4 && enc_str.length() > 9) ? enc_str.substring(scroll_pos, scroll_pos + 9) : enc_str;
+        display.getTextBounds(display_enc, 0, 0, &x1, &y1, &w, &h);
+        center_x = (GAME_WIDTH - w) / 2;
+        display.setCursor(center_x, y);
         display.printf("%s", display_enc.c_str());
       }
     }
