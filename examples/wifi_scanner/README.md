@@ -1,4 +1,7 @@
 # WiFi Scanner App
+
+![WiFi Scanner Demo](../../docs/gifs/wifi_scanner.gif)
+
 This is a WiFi scanner app for the device32 (ESP32-based board with OLED display). It scans and displays nearby WiFi access points with their details.
 
 ## Requirements
