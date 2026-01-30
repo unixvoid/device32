@@ -14,8 +14,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Update to your WiFi creds!
 // Update to your WiFi creds!WiFi
-const char* ssid = "kame house";
-const char* pass = "spacedicks";
+const char* ssid = "Wokwi-GUEST";
+const char* pass = "";
 // Update to your location!
 //   Default for Omaha, NE
 const float latitude = 41.2565;
