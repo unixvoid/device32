@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flash device32 firmware directly from your browser.">
+  <title>device32 | Firmware flasher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">ESP32-C3 &middot; XIAO</p>
+        <h1 id="page-title">device32 firmware.</h1>
+        <p class="lede">Connect your device32 over USB and flash firmware from the browser.
+          Pick a release, pick a build, then hit select device.</p>
+      </div>
+      <img class="hero-art" src="device32_banner.png" alt="device32 hardware" width="320">
+    </section>
+
+    <section class="flasher-panel" aria-labelledby="flash-heading">
+      <h2 class="panel-heading" id="flash-heading">Web flasher</h2>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Firmware release</span>
+          <select id="releaseSelect" disabled>
+            <option>Fetching releases...</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Build</span>
+          <select id="appSelect" disabled>
+            <option>Pick a release first</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="hint" id="appHint" role="status"></p>
+
+      <div class="action-row">
+        <esp-web-install-button id="espInstall">
+          <button class="flash-button" id="flashButton" slot="activate" type="button" disabled>
+            <span class="button-icon">&#8599;</span>
+            <span>Select Device</span>
+          </button>
+          <span slot="unsupported" class="hint hint-warn">
+            Your browser does not support Web Serial. Use desktop Chrome or Edge over HTTPS.
+          </span>
+          <span slot="not-allowed" class="hint hint-warn">
+            Web Serial requires a secure context (https:// or localhost).
+          </span>
+        </esp-web-install-button>
+        <a class="release-link" id="releaseLink"
+           href="https://github.com/unixvoid/device32/releases"
+           target="_blank" rel="noreferrer">View release notes <span>&#8599;</span></a>
+      </div>
+    </section>
+
+    <section class="notes">
+      <h2>Before you flash</h2>
+      <ul>
+        <li><strong>full_demo</strong> is the build that ships on the device &mdash; auto-cycling
+          animations and games. Tap the button to advance, hold 3s to toggle auto-play.</li>
+        <li>The other entries are the individual examples (boids, snake, pong, timer, ...).</li>
+        <li>Erase is on by default; the device will reboot into the new firmware when done.</li>
+        <li>Web Serial needs desktop <strong>Chrome</strong> or <strong>Edge</strong> (89+) and a USB connection.</li>
+      </ul>
+      <p class="disclaimer">The <code>weather</code> and <code>wifi_scanner</code> examples are not
+        published here because they contain hardcoded WiFi credentials. Build and flash those
+        locally from <a href="https://github.com/unixvoid/device32/tree/main/examples">examples/</a>.</p>
+    </section>
+
+    <footer class="footer">
+      <span>device32 firmware utility</span>
+      <a href="hardware.md">hardware notes</a>
+      <a href="https://github.com/unixvoid/device32" target="_blank" rel="noreferrer">github.com/unixvoid/device32 &#8599;</a>
+    </footer>
+  </main>
+
+  <script type="module" src="https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

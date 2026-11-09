@@ -1,7 +1,11 @@
 # Getting started with device32
 ![device32](docs/device32_banner.png)
 [![build](https://github.com/unixvoid/device32/actions/workflows/build.yml/badge.svg)](https://github.com/unixvoid/device32/actions/workflows/build.yml)
+[![release](https://img.shields.io/github/v/release/unixvoid/device32)](https://github.com/unixvoid/device32/releases)
+[![Firmware flasher](https://img.shields.io/badge/%F0%9F%94%A5%20Flasher-web-green.svg)](https://unixvoid.github.io/device32/)
 [![GitHub License](https://img.shields.io/badge/License-MIT-blue?logo=github)](https://github.com/unixvoid/device32/blob/main/LICENSE)
+
+**Flash firmware directly from your browser → unixvoid.github.io/device32**
 
 This repository contains PlatformIO example projects and documentation for device32, an ESP32-based device with OLED display and select button on the back.
 
@@ -45,6 +49,39 @@ There's an online demo available on Wokwi that simulates the full device32 hardw
 - D5/GPIO3 -> Button
 - D6/GPIO4 -> OLED SCL
 - D7/GPIO5 -> OLED SDA
+
+## Flashing from the browser
+
+You do not need a toolchain to get firmware onto a device32. Open
+**[unixvoid.github.io/device32](https://unixvoid.github.io/device32/)**, pick a
+release and a build (`full_demo` or any single example), connect the board over
+USB-C, and click **Select Device**. Desktop Chrome or Edge is required (Web Serial).
+
+`weather` and `wifi_scanner` are intentionally not published there because they
+ship hardcoded WiFi credentials — build those locally.
+
+## Cutting a new version
+
+1. Create and push a version tag:
+
+   ```bash
+   git tag 1.0.0
+   git push origin 1.0.0
+   ```
+
+   Both `1.0.0` and `v1.0.0` style tags work — any tag matching `v*` or `[0-9]*`
+   triggers the release build.
+
+2. `.github/workflows/build.yml` builds every example on the tag, stages the
+   flashable binaries, and publishes a GitHub Release containing
+   `device32-<version>-firmware.zip`.
+3. The release job then calls `.github/workflows/pages.yml`, which unpacks the new
+   firmware into `docs/firmware/<version>/` alongside the previous releases and
+   redeploys the flasher.
+
+> **Note:** the flasher dropdown only lists releases that carry a
+> `device32-*-firmware.zip` asset. A tag pushed before this pipeline existed will
+> never show up — re-tag it.
 
 ### Contributions
 See CONTRIBUTING.md for contribution guidelines and example creation guidance.

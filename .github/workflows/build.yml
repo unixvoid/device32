@@ -3,33 +3,169 @@ name: Build
 on:
   push:
     branches: [ main, develop, task/*, feature/* ]
+    tags:
+      - 'v*'
+      - '[0-9]*'
   pull_request:
     branches: [ main, develop, task/*, feature/* ]
 
+env:
+  PIO_ENV: seeed_xiao_esp32c3
+  # Built for CI, but intentionally never shipped to the public web flasher
+  # (hardcoded WiFi credentials in src/main.cpp).
+  FLASHER_EXCLUDED: '["weather","wifi_scanner"]'
+
 jobs:
   build:
+    name: build ${{ matrix.app }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - boids
+          - brick_break
+          - caves
+          - fluid_cloud
+          - full_demo
+          - game_of_life
+          - lava_lamp
+          - morph
+          - pong
+          - snake
+          - starfield
+          - timer
+          - weather
+          - wifi_scanner
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/.cache
+            ~/.platformio/packages
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('examples/*/platformio.ini') }}
+          restore-keys: |
+            pio-${{ runner.os }}-
 
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install platformio
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Build all examples
-      run: |
-        for dir in examples/*/; do
-          if [ -f "$dir/platformio.ini" ]; then
-            echo "Building $dir"
-            cd "$dir"
-            pio run
-            cd ../..
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Build ${{ matrix.app }}
+        working-directory: examples/${{ matrix.app }}
+        run: pio run -e ${{ env.PIO_ENV }}
+
+      # ---- release packaging (tag builds only) -------------------------------
+      - name: Stage firmware files
+        if: >-
+          startsWith(github.ref, 'refs/tags/') &&
+          !contains(fromJSON(env.FLASHER_EXCLUDED), matrix.app)
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/}"
+          APP="${{ matrix.app }}"
+          OUT="firmware/${VERSION}/${APP}"
+          BUILD="examples/${APP}/.pio/build/${PIO_ENV}"
+
+          mkdir -p "$OUT"
+          cp "$BUILD/bootloader.bin" "$OUT/bootloader.bin"
+          cp "$BUILD/partitions.bin" "$OUT/partitions.bin"
+          cp "$BUILD/firmware.bin"   "$OUT/firmware.bin"
+
+          # boot_app0.bin is not produced in .pio/build; PlatformIO takes it from
+          # the framework package, so locate it dynamically (version-safe).
+          BOOT_APP0="$(find "$HOME/.platformio/packages" -name boot_app0.bin -print -quit)"
+          if [ -z "$BOOT_APP0" ]; then
+            echo "::error::boot_app0.bin not found in PlatformIO packages"
+            exit 1
           fi
-        done
+          cp "$BOOT_APP0" "$OUT/boot_app0.bin"
+
+          # Offsets verified from PlatformIO idedata.json (ESP32-C3):
+          #   bootloader 0x0, partitions 0x8000, boot_app0 0xe000, app 0x10000
+          cat > "$OUT/manifest.json" <<EOF
+          {
+            "name": "device32 - ${APP}",
+            "version": "${VERSION}",
+            "new_install_prompt_erase": true,
+            "builds": [
+              {
+                "chipFamily": "ESP32-C3",
+                "parts": [
+                  { "path": "bootloader.bin", "offset": 0 },
+                  { "path": "partitions.bin", "offset": 32768 },
+                  { "path": "boot_app0.bin",  "offset": 57344 },
+                  { "path": "firmware.bin",   "offset": 65536 }
+                ]
+              }
+            ]
+          }
+          EOF
+
+          ls -la "$OUT"
+
+      - name: Upload firmware artifact
+        if: >-
+          startsWith(github.ref, 'refs/tags/') &&
+          !contains(fromJSON(env.FLASHER_EXCLUDED), matrix.app)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw-${{ matrix.app }}
+          path: firmware/
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Download staged firmware
+        uses: actions/download-artifact@v4
+        with:
+          path: firmware
+          pattern: fw-*
+          merge-multiple: true
+
+      - name: Bundle firmware zip
+        run: |
+          set -euo pipefail
+          # Archive the top-level ./firmware dir so the zip contains
+          # firmware/<tag>/<app>/... which unzips cleanly into docs/.
+          zip -r "device32-${{ steps.version.outputs.version }}-firmware.zip" firmware
+          unzip -l "device32-${{ steps.version.outputs.version }}-firmware.zip" | head -20
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: device32-${{ steps.version.outputs.version }}-firmware.zip
+          generate_release_notes: true
+
+  pages:
+    name: Deploy web flasher
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: release
+    # Job-level permissions on a reusable-workflow call cap what the callee gets.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
