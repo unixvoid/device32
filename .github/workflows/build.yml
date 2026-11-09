@@ -11,9 +11,11 @@ on:
 
 env:
   PIO_ENV: seeed_xiao_esp32c3
-  # Built for CI, but intentionally never shipped to the public web flasher
-  # (hardcoded WiFi credentials in src/main.cpp).
-  FLASHER_EXCLUDED: '["weather","wifi_scanner"]'
+  # Apps that must never be published to the web flasher. Empty now that
+  # `weather` provisions its own network on first boot (SoftAP captive portal)
+  # and `wifi_scanner` uses no credentials at all. The mechanism is kept so a
+  # future example that genuinely cannot be published stays easy to exclude.
+  FLASHER_EXCLUDED: '[]'
 
 jobs:
   build:

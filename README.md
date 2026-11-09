@@ -57,8 +57,11 @@ You do not need a toolchain to get firmware onto a device32. Open
 release and a build (`full_demo` or any single example), connect the board over
 USB-C, and click **Select Device**. Desktop Chrome or Edge is required (Web Serial).
 
-`weather` and `wifi_scanner` are intentionally not published there because they
-ship hardcoded WiFi credentials — build those locally.
+No example ships with credentials baked into the binary, so every build here is
+safe to flash. `wifi_scanner` needs no network at all. **`weather` provisions
+itself**: on first boot it raises a `device32-weather` hotspot — join it, open
+`192.168.4.1`, and pick your network. It's stored on the device, never in the
+firmware. Hold the button ~4 seconds any time to re-enter setup.
 
 ## Cutting a new version
 

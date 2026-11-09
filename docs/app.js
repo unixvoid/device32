@@ -17,6 +17,8 @@ const APP_META = {
   snake:        { label: 'Snake',        hint: 'Snake, played with the button.' },
   starfield:    { label: 'Starfield',    hint: 'Warp-speed starfield.' },
   timer:        { label: 'Timer',        hint: 'Countdown timer with button input.' },
+  weather:      { label: 'Weather',      hint: 'Live weather + clock. On first boot the device raises a "device32-weather" hotspot so you can enter your own network.' },
+  wifi_scanner: { label: 'WiFi Scanner', hint: 'Scans and lists nearby access points with signal details.' },
 };
 
 const installButton = document.querySelector('#espInstall');

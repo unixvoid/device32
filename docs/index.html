@@ -69,11 +69,15 @@
           animations and games. Tap the button to advance, hold 3s to toggle auto-play.</li>
         <li>The other entries are the individual examples (boids, snake, pong, timer, ...).</li>
         <li>Erase is on by default; the device will reboot into the new firmware when done.</li>
+        <li><strong>weather</strong> needs your WiFi. After flashing it raises a
+          <code>device32-weather</code> hotspot &mdash; join it, open <code>192.168.4.1</code> and
+          enter your network. The credentials are stored on the device, never in the firmware.</li>
         <li>Web Serial needs desktop <strong>Chrome</strong> or <strong>Edge</strong> (89+) and a USB connection.</li>
       </ul>
-      <p class="disclaimer">The <code>weather</code> and <code>wifi_scanner</code> examples are not
-        published here because they contain hardcoded WiFi credentials. Build and flash those
-        locally from <a href="https://github.com/unixvoid/device32/tree/main/examples">examples/</a>.</p>
+      <p class="disclaimer">No example ships with credentials baked in, so every build here is
+        safe to flash. <strong>weather</strong> is configured from a phone on first boot; hold the
+        button for ~4&nbsp;seconds any time to re-enter setup. Browse the sources in
+        <a href="https://github.com/unixvoid/device32/tree/main/examples">examples/</a>.</p>
     </section>
 
     <footer class="footer">

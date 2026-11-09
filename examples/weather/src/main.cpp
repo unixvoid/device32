@@ -6,16 +6,15 @@
 #include <ArduinoJson.h>
 #include <time.h>
 #include "config.h"
+#include "provisioning.h"
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #define GAME_WIDTH 64
 #define GAME_HEIGHT 128
 
-// Update to your WiFi creds!
-// Update to your WiFi creds!WiFi
-const char* ssid = "kame house";
-const char* pass = "spacedicks";
+// WiFi credentials are not compiled in: on first boot the device raises a
+// captive-portal SoftAP and stores the chosen network in NVS (see README.md).
 // Update to your location!
 //   Default for Omaha, NE
 const float latitude = 41.2565;
@@ -198,57 +197,9 @@ void showBootScreen() {
 }
 
 void connectToWiFi() {
-  WiFi.begin(ssid, pass);
-  
-  int step = 0;
-  unsigned long lastDotUpdate = 0;
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    unsigned long currentMillis = millis();
-    
-    // Update dots every 500ms
-    if (currentMillis - lastDotUpdate >= 500) {
-      display.clearDisplay();
-      
-      int dotCount = step % 4;
-      String connectingText = "WiFi";
-      for (int i = 0; i < dotCount; i++) {
-        connectingText += ".";
-      }
-      
-      display.setTextSize(1);
-      display.setTextColor(SSD1306_WHITE);
-      
-      int16_t x1, y1;
-      uint16_t w, h;
-      display.getTextBounds(connectingText, 0, 0, &x1, &y1, &w, &h);
-      
-      int textX = (GAME_WIDTH - w) / 2;
-      int textY = (GAME_HEIGHT - h) / 2;
-      
-      String maxText = "WiFi...";
-      display.getTextBounds(maxText, 0, 0, &x1, &y1, &w, &h);
-      int maxTextX = (GAME_WIDTH - w) / 2;
-      
-      int padding = 4;
-      int rectX = maxTextX - padding;
-      int rectY = textY - padding;
-      int rectW = w + (padding * 2);
-      int rectH = h + (padding * 2);
-      display.drawRoundRect(rectX, rectY, rectW, rectH, 2, SSD1306_WHITE);
-      
-      display.setCursor(textX, textY);
-      display.println(connectingText);
-      
-      display.display();
-      
-      step = (step + 1) % 4;
-      
-      lastDotUpdate = currentMillis;
-    }
-    
-    delay(100);
-  }
+  // Connects with stored credentials, or raises the captive-portal setup flow
+  // when none are stored or the saved network cannot be reached.
+  wifiConnectOrProvision(WIFI_CONNECT_TIMEOUT_MS);
 }
 
 String getWeather() {
@@ -312,6 +263,9 @@ void setup() {
   display.clearDisplay();
   display.display();
 
+  // Button: held during normal operation to reset WiFi credentials
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
   // Show boot screen
   showBootScreen();
 
@@ -325,11 +279,43 @@ void setup() {
   updateTime();
 }
 
+// Long-pressing the button wipes the stored WiFi credentials so the device
+// comes back up in the captive-portal setup flow.
+void handleResetButton() {
+  static bool pressed = false;
+  static unsigned long pressedAt = 0;
+
+  if (digitalRead(BUTTON_PIN) != LOW) {
+    pressed = false;
+    return;
+  }
+
+  if (!pressed) {
+    pressed = true;
+    pressedAt = millis();
+    return;
+  }
+
+  if (millis() - pressedAt >= RESET_WIFI_HOLD_TIME) {
+    pressed = false;
+    display.clearDisplay();
+    drawCenteredText("WiFi reset", 44, 1, GAME_WIDTH);
+    drawCenteredText("re-entering setup", 58, 1, GAME_WIDTH);
+    display.display();
+    delay(900);
+    wifiClearCredentials();
+    ESP.restart();
+  }
+}
+
 void loop() {
   static unsigned long lastWeatherUpdate = 0;
   static unsigned long lastTimeUpdate = 0;
 
   unsigned long now = millis();
+
+  // Hold the button to wipe stored WiFi credentials and re-enter setup
+  handleResetButton();
 
   if (now - lastWeatherUpdate > 180000) { // Update weather every 3 minutes
     getWeather();
